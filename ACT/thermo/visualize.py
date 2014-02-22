@@ -1,6 +1,7 @@
 """
 	Classes and functions used to visualize data for thermo scientific analyzers
 """
+
 from pandas import Series, DataFrame
 import pandas as pd
 import datetime as dt
@@ -13,9 +14,9 @@ import glob
 import matplotlib
 import warnings
 
+__all__ = ['diurnal_plot','diurnal_plot_single', 'ThermoPlot']
 
-
-def diurnal_plot(data, all_data=True, dates=[], shaded=False, title="Diurnal Profile of Trace Gases", xlabel="Local Time: East St. Louis, MO"):
+def diurnal_plot(data, dates=[], shaded=False, title="Diurnal Profile of Trace Gases", xlabel="Local Time: East St. Louis, MO"):
     '''
        
 	   If plotting the entire DataFrame (data), choose all_data=True, else choose all_data=False
@@ -31,24 +32,19 @@ def diurnal_plot(data, all_data=True, dates=[], shaded=False, title="Diurnal Pro
          print ("data is not a pandas DataFrame, thus this will not end well for you.")
          exit
     
-    # Check to see if all_data = True and a date is defined
-    if all_data == True and len(dates) != 0:
-        warnings.warn("You have conflicting dates. Please choose either `all` OR set the dates, but not both. Default has been set to plot all dates.")
+    # If length of dates is zero, plot everything
+    if len(dates) == 0:
+        # Plot everything, yo!
+        pass
+    elif len(dates) == 1:
+        # Plot just this date
+        data = data[dates[0]]
+    elif len(dates) == 2:
+        # Plot between these dates
+        data = data[dates[0]:dates[1]]
+    else:
+        sys.exit("Dates are not properly configured.")
         
-    # If not plotting all the data, truncate the dataframe to include only the needed data
-    if all_data == False:
-        # Check to see if dates is a list or a string
-        if type(dates) == list:
-            if len(dates) == 0:
-                warnings.warn("all_dates has been set to False, but no dates have been declared.")
-                exit
-            elif len(dates) == 1:
-                data = data[dates[0]]
-            else:
-                data = data[dates[0]:dates[1]]
-        else:
-            warnings.warn("dates is not properly configured")
-            exit
       
     # Add columns for time to enable simple diurnal trends to be found
     data['Time'] = data.index.map(lambda x: x.strftime("%H:%M"))
@@ -115,8 +111,96 @@ def diurnal_plot(data, all_data=True, dates=[], shaded=False, title="Diurnal Pro
     
     return (fig, (ax1, ax2, ax3))
 	
+def diurnal_plot_single(data, model='', dates=[], shaded=False, color1 = 'blue',
+                        title="Diurnal Profile of Trace Gases", xlabel="Local Time: East St. Louis, MO", 
+                        ylabel=r'$\ [NO_x]  (ppb)$'):
+    '''
+       `data` should be a pandas core DataFrame with time index and each trace gas concentration as a column
+       
+       returns a single plot for one of the three analyzers.
+       
+       >>>diurnal_plot_single(data,model='o3', ylabel='O3', shaded=True, color1='green')
+
+    '''
+    
+    # Check to make sure the data is a valid dataframe
+    if not isinstance(data, pd.DataFrame):
+        sys.exit("data is not a pandas DataFrame, thus this will not end well for you.")
+        
+    # Check to make sure the model is valid
+    if model.lower() not in ['nox','so2','o3']:
+        sys.exit("Model is not defined correctly: options are ['nox','so2','sox','o3']")
+        
+    # Set model to predefined variable
+    if model.lower() == 'nox':
+        instr = 'nox'
+    elif model.lower() == 'so2' or model.lower() == 'sox':
+        instr = 'sox'
+    else:
+        instr = 'o3'
+    
+    
+    # If not plotting all the data, truncate the dataframe to include only the needed data
+    if len(dates) == 0:
+        # plot everything
+        pass
+    elif len(dates) == 1:
+        # plot just this date
+        data = data[dates[0]]
+    elif len(dates) == 2:
+        # plot between these dates
+        data = data[dates[0]:dates[1]]
+    else:
+        sys.exit("You have an error with how you defined your dates")
+      
+    # Add columns for time to enable simple diurnal trends to be found
+    data['Time'] = data.index.map(lambda x: x.strftime("%H:%M"))
+    
+    # Group the data by time and grab the statistics
+    grouped = data.groupby('Time').describe().unstack()
+    
+    # set the index to be a str
+    grouped.index = pd.to_datetime(grouped.index.astype(str))
+
+    # Plot
+    fig, ax = plt.subplots(1, figsize=(8,4))
+
+    # Set plot titles and labels
+    ax.set_title(title, fontsize=14)
+    ax.set_ylabel(ylabel, fontsize=14, weight='bold')
+    ax.set_xlabel(xlabel, fontsize=14)
+
+    # Set y min to zero just in case:
+    ax.set_ylim(0,grouped[instr]['mean'].max()*1.05)
+
+    
+    # Plot means
+    ax.plot(grouped.index, grouped[instr]['mean'], color1,linewidth=2.0)
+
+    
+    # If shaded=true, plot trends
+    if shaded == True:
+        ax.plot(grouped.index, grouped[instr]['75%'],color1)
+        ax.plot(grouped.index, grouped[instr]['25%'],color1)
+        ax.set_ylim(0,grouped[instr]['75%'].max()*1.05)
+        ax.fill_between(grouped.index, grouped[instr]['mean'], grouped[instr]['75%'], alpha=.5, facecolor=color1)
+        ax.fill_between(grouped.index, grouped[instr]['mean'], grouped[instr]['25%'], alpha=.5, facecolor=color1)
+    
+    
+    # Get/Set xticks
+    ticks = ax.get_xticks()
+    ax.set_xticks(np.linspace(ticks[0], d.date2num(d.num2date(ticks[-1]) + dt.timedelta(hours=3)), 5))
+    ax.set_xticks(np.linspace(ticks[0], d.date2num(d.num2date(ticks[-1]) + dt.timedelta(hours=3)), 25), minor=True)
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%I:%M %p'))
+    
+    # Make the layout tight to get rid of some whitespace
+    plt.tight_layout()
+    plt.show()
+    
+    return (fig, ax)
+
 	
-class Thermo():
+class ThermoPlot():
     '''
         Allows for easy plotting of internal instrument data. Currently supports the 
         following models:
@@ -134,15 +218,13 @@ class Thermo():
 			instrument data such as flow rates and temperatures. The bottom plot contains trace gas data for the
 			instrument.
 			
-			Returns the figure and three axes objects for the plot
+			>>> nox = ThermoPlot(data)
+			>>> f, (a1, a2, a3) = nox.debug_plot_nox()
         '''
-		#  Example for plotting debug plot
-		# >>> nox = Thermo(data)
-		# >>> f, (a1, a2, a3) = nox.debug_plot_nox()
-      
+		
         # Set default values for plot based on what is/isn't in the args dictionary
         default_args = {
-            'title':"Debug Plot for " + r'$\ NO_{x} $' + ": Model 49I",
+            'title':"Debug Plot for " + r'$\ NO_{x} $' + ": Model 42I",
             'xlabel':'Local Time, East St Louis, MO',
             'ylabpressure':'Flow (LPM)',
             'ylabgas':'Gas Conc. (ppb)',
@@ -155,6 +237,7 @@ class Thermo():
             'grid':False
             }
         
+		# If krwargs are set, replace the default values
         for key, val in default_args.iteritems():
             if args.has_key(key):
                 default_args[key] = args[key]
@@ -209,11 +292,9 @@ class Thermo():
 			instrument data such as flow rates and temperatures. The bottom plot contains trace gas data for the
 			instrument.
 			
-			Returns the figure and three axes objects for the plot
+			>>>sox = Thermo(data)
+			>>> f, (a1, a2, a3) = sox.debug_plot_sox()
         '''
-		#  Example for plotting debug plot
-		# >>> nox = Thermo(data)
-		# >>> f, (a1, a2, a3) = nox.debug_plot_nox()
       
         # Set default values for plot based on what is/isn't in the args dictionary
         default_args = {

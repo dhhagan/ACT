@@ -1,2 +1,2 @@
-#from .thermo.visualize import diurnal_plot, Thermo
+from .thermo.visualize import *
 from .thermo.io import *

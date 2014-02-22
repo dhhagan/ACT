@@ -1,8 +1,7 @@
 """
 	Functions used to import and export thermo scientific analyzer data
 """
-#__all__ = ['read_thermo_dat','read_thermo_csv','read_thermo_xlsx']
-__all__ = []
+__all__ = ['read_thermo_dat','read_thermo_csv','read_thermo_xlsx']
 
 import os
 import re
