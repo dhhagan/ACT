@@ -1,4 +1,17 @@
-# /ACT/io/parse.py
+"""
+	Functions used to import and export thermo scientific analyzer data
+"""
+#__all__ = ['read_thermo_dat','read_thermo_csv','read_thermo_xlsx']
+__all__ = []
+
+import os
+import re
+import sys
+import warnings
+import glob
+import pandas as pd
+from pandas import Series, DataFrame
+
 
 def numericalSort(value):
 	numbers = re.compile(r'(\d+)')
@@ -59,7 +72,9 @@ def read_thermo_dat(model='nox', runDir=os.getcwd(), sample_int='1min', start=No
         returns the number of files read and DataSeries containing all data munged and organized for the user for the 
             Thermo Scientific line of atmospheric gas analyzers
     '''
-    
+	
+    # >>>filecount, no = read_thermo_dat('o3', runDir=dataDir)
+	
     # If the data is in a different directory, change the directory
     if os.getcwd() != runDir:
         os.chdir(runDir)
@@ -108,7 +123,8 @@ def read_thermo_xlsx(filename=None, sheetname='Sheet1', runDir=os.getcwd(), samp
             Thermo Scientific line of atmospheric gas analyzers
         This assumes all necessary data is in one sheet within one workbook.
     '''
-    
+    # >>>test = read_thermo_xlsx("SLAQRS.xlsx",runDir="C:/Users/David/Dropbox/SLAQRS/")
+	
     # If the data is in a different directory, change the directory
     if os.getcwd() != runDir:
         os.chdir(runDir)
@@ -134,7 +150,8 @@ def read_thermo_csv(filename=None, runDir=os.getcwd(), sample_int='1min'):
             Thermo Scientific line of atmospheric gas analyzers
         This assumes all necessary data is in one sheet within one workbook.
     '''
-    
+    # >>>test = read_thermo_csv("SLAQRS.csv",runDir="C:/Users/David/Dropbox/SLAQRS/")
+	
     # If the data is in a different directory, change the directory
     if os.getcwd() != runDir:
         os.chdir(runDir)
