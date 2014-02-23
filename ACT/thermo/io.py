@@ -69,11 +69,11 @@ def read_thermo_dat(model='nox', runDir=os.getcwd(), sample_int='1min', start=No
         Reads thermo data from .dat file type.
         model = one of: nox, sox, or o3
         returns the number of files read and DataSeries containing all data munged and organized for the user for the 
-            Thermo Scientific line of atmospheric gas analyzers
-    '''
-	
-    # >>>filecount, no = read_thermo_dat('o3', runDir=dataDir)
-	
+        Thermo Scientific line of atmospheric gas analyzers
+			
+		>>>filecount, no = read_thermo_dat('o3', runDir=dataDir)
+	'''
+
     # If the data is in a different directory, change the directory
     if os.getcwd() != runDir:
         os.chdir(runDir)
