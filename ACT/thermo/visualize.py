@@ -200,7 +200,7 @@ def diurnal_plot_single(data, model='', dates=[], shaded=False, color1 = 'blue',
     return (fig, ax)
 
 	
-class ThermoPlot():
+class ThermoPlot(): 
     '''
         Allows for easy plotting of internal instrument data. Currently supports the 
         following models:
@@ -208,45 +208,62 @@ class ThermoPlot():
             - O3 (49I)
             - SO2 (43I)
     '''
-      
+    
     def __init__(self, data):
         self.data = data
         
-    def debug_plot_nox(self, args={}):
+    def debug_plot(self, args={}):
+        
         '''
-            Plots thermo scientific instrument data for debugging purposes. The top plot contains internal
-			instrument data such as flow rates and temperatures. The bottom plot contains trace gas data for the
-			instrument.
-			
-			>>> nox = ThermoPlot(data)
-			>>> f, (a1, a2, a3) = nox.debug_plot_nox()
-        '''
-		
-        # Set default values for plot based on what is/isn't in the args dictionary
+				Plots thermo scientific instrument data for debugging purposes. The top plot contains internal
+				instrument data such as flow rates and temperatures. The bottom plot contains trace gas data for the
+				instrument.
+				
+				instrument must be set to either nox, so2, sox, or o3
+				
+				>>> nox = ThermoPlot(data)
+				>>> f, (a1, a2, a3) = nox.debug_plot()
+		'''
         default_args = {
-            'title':"Debug Plot for " + r'$\ NO_{x} $' + ": Model 42I",
-            'xlabel':'Local Time, East St Louis, MO',
-            'ylabpressure':'Flow (LPM)',
-            'ylabgas':'Gas Conc. (ppb)',
-            'ylabtemp':'Temperature (C)',
-            'color_no':'#FAB923',
-            'color_nox':'#FC5603',
-            'color_no2':'#FAE823',
-            'title_fontsize':'18',
-            'labels_fontsize':'14',
-            'grid':False
+                'xlabel':'Local Time, East St Louis, MO',
+                'ylabpressure':'Flow (LPM)',
+                'ylabgas':'Gas Conc. (ppb)',
+                'ylabtemp':'Temperature (C)',
+                'title_fontsize':'18',
+                'labels_fontsize':'14',
+                'grid':False
             }
         
-		# If krwargs are set, replace the default values
+        # Figure out what model we are trying to plot and set instrument specific default args
+        cols = [i.lower() for i in self.data.columns.values.tolist()]
+        
+        if 'o3' in cols:
+            default_args['instrument'] = 'o3'
+            default_args['title'] = "Debug Plot for " + r'$\ O_{3} $' + ": Model 49I"
+            default_args['color_o3'] = 'blue'
+        elif 'sox' in cols or 'so2' in cols:
+            default_args['instrument'] = 'so2'
+            default_args['title'] = "Debug Plot for " + r'$\ SO_{2} $' + ": Model 43I"
+            default_args['color_so2'] = 'green'
+        elif 'nox' in cols:
+            default_args['instrument'] = 'nox'
+            default_args['title'] = "Debug Plot for " + r'$\ NO_{x} $' + ": Model 42I"
+            default_args['color_no'] = '#FAB923'
+            default_args['color_nox'] = '#FC5603'
+            default_args['color_no2'] = '#FAE823'
+        else:
+            sys.exit("Could not figure out what isntrument this is for")
+        
+        # If kwargs are set, replace the default values
         for key, val in default_args.iteritems():
             if args.has_key(key):
                 default_args[key] = args[key]
-        
+                
         # Set up Plot and all three axes
         fig, (ax1, ax3) = plt.subplots(2, figsize=(10,6), sharex=True)
         ax2 = ax1.twinx()
         
-        # Set axes labels and titles
+        # set up axes labels and titles
         ax1.set_title(default_args['title'], fontsize=default_args['title_fontsize'])
         ax1.set_ylabel(default_args['ylabpressure'], fontsize=default_args['labels_fontsize'])
         ax2.set_ylabel(default_args['ylabtemp'], fontsize=default_args['labels_fontsize'])
@@ -254,174 +271,32 @@ class ThermoPlot():
         ax3.set_xlabel(default_args['xlabel'], fontsize=default_args['labels_fontsize'])
         
         # Make the ticks invisible on the first and second plots
-        plt.setp( ax1.get_xticklabels(), visible=False)
- 
-        # Plot the debug data on the top graph
-        m = max(self.data.convt.max(),self.data.intt.max(),self.data.pmtt.max())
-        self.data['convt'].plot(ax=ax2, label=r'$\ T_{converter}$')
-        self.data['intt'].plot(ax=ax2, label=r'$\ T_{internal}$')
-        self.data['rctt'].plot(ax=ax2, label=r'$\ T_{reactor}$')
-        self.data['pmtt'].plot(ax=ax2, label=r'$\ T_{PMT}$')
-        self.data['smplf'].plot(ax=ax1, label=r'$\ Q_{sample}$', style='--')
-        self.data['ozonf'].plot(ax=ax1, label=r'$\ Q_{ozone}$', style='--')
-        
-        # Plot the gas data on the bottom graph
-        self.data['no'].plot(ax=ax3, label=r'$\ NO $', color=default_args['color_no'])
-        self.data['no2'].plot(ax=ax3, label=r'$\ NO_{2}$', color=default_args['color_no2'])
-        self.data['nox'].plot(ax=ax3, label=r'$\ NO_{x}$', color=default_args['color_nox'], ylim=(0,math.ceil(self.data.nox.max()*1.05)))
+        plt.setp( ax1.get_xticklabels(), visible=False )
 
-        # Get labels for the top graph to build a single legend
-        lines, labels = ax1.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines+lines2,labels+labels2,bbox_to_anchor=(1.10,1), loc=2, borderaxespad=0.)
-        ax3.legend(bbox_to_anchor=(1.10,1.), loc=2, borderaxespad=0.)  
-        
-        # Hide the grid lines
-        ax1.grid(default_args['grid'])
-        ax2.grid(default_args['grid'])
-        ax3.grid(default_args['grid'])
-        
-        plt.tight_layout()
-        plt.show() 
-        
-        return (fig, (ax1, ax2, ax3))
-    
-    def debug_plot_sox(self, args={}):
-        '''
-            Plots thermo scientific instrument data for debugging purposes. The top plot contains internal
-			instrument data such as flow rates and temperatures. The bottom plot contains trace gas data for the
-			instrument.
-			
-			>>>sox = Thermo(data)
-			>>> f, (a1, a2, a3) = sox.debug_plot_sox()
-        '''
-      
-        # Set default values for plot based on what is/isn't in the args dictionary
-        default_args = {
-            'title':"Debug Plot for " + r'$\ SO_{2} $' + ": Model 43I",
-            'xlabel':'Local Time, East St Louis, MO',
-            'ylabpressure':'Flow (LPM)',
-            'ylabgas':'Gas Conc. (ppb)',
-            'ylabtemp':'Temperature (C)',
-            'color_so2':'green',
-            'title_fontsize':'18',
-            'labels_fontsize':'14',
-            'grid':False
-            }
-        
-        for key, val in default_args.iteritems():
-            if args.has_key(key):
-                default_args[key] = args[key]
-        
-        # Set up Plot and all three axes
-        fig, (ax1, ax3) = plt.subplots(2, figsize=(10,6), sharex=True)
-        ax2 = ax1.twinx()
-        
-        # Set axes labels and titles
-        ax1.set_title(default_args['title'], fontsize=default_args['title_fontsize'])
-        ax1.set_ylabel(default_args['ylabpressure'], fontsize=default_args['labels_fontsize'])
-        ax2.set_ylabel(default_args['ylabtemp'], fontsize=default_args['labels_fontsize'])
-        ax3.set_ylabel(default_args['ylabgas'], fontsize=default_args['labels_fontsize'])
-        ax3.set_xlabel(default_args['xlabel'], fontsize=default_args['labels_fontsize'])
-        
-        
-        # Make the ticks invisible on the first and second plots
-        plt.setp( ax1.get_xticklabels(), visible=False)
- 
         # Plot the debug data on the top graph
-       # m = max(self.data.convt.max(),self.data.intt.max(),self.data.pmtt.max())
-        self.data['intt'].plot(ax=ax2, label=r'$\ T_{internal}$')
-        self.data['rctt'].plot(ax=ax2, label=r'$\ T_{reactor}$')
-        
-        self.data['smplfl'].plot(ax=ax1, label=r'$\ Q_{sample}$', style='--')
-        
-        # Plot the gas data on the bottom graph
-        self.data['so2'].plot(ax=ax3, label=r'$\ SO_2 $', color=default_args['color_so2'], ylim=[0,self.data['so2'].max()*1.05])
-        
-        # Get labels for the top graph to build a single legend
-        lines, labels = ax1.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines+lines2,labels+labels2,bbox_to_anchor=(1.10,1), loc=2, borderaxespad=0.)
-        ax3.legend(bbox_to_anchor=(1.10,1.), loc=2, borderaxespad=0.)  
-        
-        # Hide the grid lines
-        ax1.grid(default_args['grid'])
-        ax2.grid(default_args['grid'])
-        ax3.grid(default_args['grid'])
-        
-        plt.tight_layout()
-        plt.show() 
-        
-        return (fig, (ax1, ax2, ax3))
+        if default_args['instrument'] == 'o3':
+            self.data['bncht'].plot(ax=ax2, label=r'$\ T_{bench}$')
+            self.data['lmpt'].plot(ax=ax2, label=r'$\ T_{lamp}$')
+            self.data['flowa'].plot(ax=ax1, label=r'$\ Q_{A}$', style='--')
+            self.data['flowb'].plot(ax=ax1, label=r'$\ Q_{B}$', style='--')
+        elif default_args['instrument'] == 'so2':
+            self.data['intt'].plot(ax=ax2, label=r'$\ T_{internal}$')
+            self.data['rctt'].plot(ax=ax2, label=r'$\ T_{reactor}$')
+            self.data['smplfl'].plot(ax=ax1, label=r'$\ Q_{sample}$', style='--')
+            self.data['so2'].plot(ax=ax3, label=r'$\ SO_2 $', color=default_args['color_so2'], ylim=[0,self.data['so2'].max()*1.05])
+        else:
+            m = max(self.data['convt'].max(),self.data.intt.max(),self.data['pmtt'].max())
+            self.data['convt'].plot(ax=ax2, label=r'$\ T_{converter}$')
+            self.data['intt'].plot(ax=ax2, label=r'$\ T_{internal}$')
+            self.data['rctt'].plot(ax=ax2, label=r'$\ T_{reactor}$')
+            self.data['pmtt'].plot(ax=ax2, label=r'$\ T_{PMT}$')
+            self.data['smplf'].plot(ax=ax1, label=r'$\ Q_{sample}$', style='--')
+            self.data['ozonf'].plot(ax=ax1, label=r'$\ Q_{ozone}$', style='--')
+            
+            self.data['no'].plot(ax=ax3, label=r'$\ NO $', color=default_args['color_no'])
+            self.data['no2'].plot(ax=ax3, label=r'$\ NO_{2}$', color=default_args['color_no2'])
+            self.data['nox'].plot(ax=ax3, label=r'$\ NO_{x}$', color=default_args['color_nox'], ylim=(0,math.ceil(self.data.nox.max()*1.05)))
     
-    def debug_plot_o3(self, args={}):
-        '''
-            Plots thermo scientific instrument data for debugging purposes. The top plot contains internal
-			instrument data such as flow rates and temperatures. The bottom plot contains trace gas data for the
-			instrument.
-			
-			Returns the figure and three axes objects for the plot
-        '''
-		#  Example for plotting debug plot
-		# >>> nox = Thermo(data)
-		# >>> f, (a1, a2, a3) = nox.debug_plot_nox()
-      
-        # Set default values for plot based on what is/isn't in the args dictionary
-        # Set default values for plot based on what is/isn't in the args dictionary
-        default_args = {
-            'title':"Debug Plot for " + r'$\ O_{3} $' + ": Model 49I",
-            'xlabel':'Local Time, East St Louis, MO',
-            'ylabpressure':'Flow (LPM)',
-            'ylabgas':'Gas Conc. (ppb)',
-            'ylabtemp':'Temperature (C)',
-            'color_o3':'blue',
-            'title_fontsize':'18',
-            'labels_fontsize':'14',
-            'grid':False
-            }
-        
-        for key, val in default_args.iteritems():
-            if args.has_key(key):
-                default_args[key] = args[key]
-        
-        # Set up Plot and all three axes
-        fig, (ax1, ax3) = plt.subplots(2, figsize=(10,6), sharex=True)
-        ax2 = ax1.twinx()
-        
-        # Set axes labels and titles
-        ax1.set_title(default_args['title'], fontsize=default_args['title_fontsize'])
-        ax1.set_ylabel(default_args['ylabpressure'], fontsize=default_args['labels_fontsize'])
-        ax2.set_ylabel(default_args['ylabtemp'], fontsize=default_args['labels_fontsize'])
-        ax3.set_ylabel(default_args['ylabgas'], fontsize=default_args['labels_fontsize'])
-        ax3.set_xlabel(default_args['xlabel'], fontsize=default_args['labels_fontsize'])
-        
-        # Make the ticks invisible on the first and second plots
-        plt.setp( ax1.get_xticklabels(), visible=False)
- 
-        # Plot the debug data on the top graph
-       # m = max(self.data.convt.max(),self.data.intt.max(),self.data.pmtt.max())
-        self.data['bncht'].plot(ax=ax2, label=r'$\ T_{bench}$')
-        self.data['lmpt'].plot(ax=ax2, label=r'$\ T_{lamp}$')
-        self.data['flowa'].plot(ax=ax1, label=r'$\ Q_{A}$', style='--')
-        self.data['flowb'].plot(ax=ax1, label=r'$\ Q_{B}$', style='--')
-        
-        # Plot the gas data on the bottom graph
-        self.data['o3'].plot(ax=ax3, label=r'$\ O_3 $', color=default_args['color_o3'], ylim=[0, self.data['o3'].max()*1.05])
-        
-        # Get labels for the top graph to build a single legend
-        lines, labels = ax1.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines+lines2,labels+labels2,bbox_to_anchor=(1.10,1), loc=2, borderaxespad=0.)
-        ax3.legend(bbox_to_anchor=(1.10,1.), loc=2, borderaxespad=0.)  
-        
-        # Hide the grid lines
-        ax1.grid(default_args['grid'])
-        ax2.grid(default_args['grid'])
-        ax3.grid(default_args['grid'])
-        
-        plt.tight_layout()
-        plt.show() 
-        
-        return (fig, (ax1, ax2, ax3))
-		
+   
+        return fig, (ax1, ax2, ax3)
 	
