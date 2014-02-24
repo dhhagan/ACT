@@ -20,11 +20,13 @@ def diurnal_plot(data, dates=[], shaded=False, title="Diurnal Profile of Trace G
     '''
        
 	   If plotting the entire DataFrame (data), choose all_data=True, else choose all_data=False
-	   and declare the date or dates to plot as a list.
-
-       `data` should be a pandas core DataFrame with time index and each trace gas concentration as a column
+	   and declare the date or dates to plot as a list. `data` should be a pandas core DataFrame 
+	   with time index and each trace gas concentration as a column
        
        returns a single plot for NOx, SO2, and O3
+	   
+	   >>>
+	   
     '''
     
     # Check to make sure the data is a valid dataframe
@@ -207,6 +209,7 @@ class ThermoPlot():
             - NO, NO2, NOx (42I)
             - O3 (49I)
             - SO2 (43I)
+
     '''
     
     def __init__(self, data):
@@ -272,7 +275,7 @@ class ThermoPlot():
         
         # Make the ticks invisible on the first and second plots
         plt.setp( ax1.get_xticklabels(), visible=False )
-
+        
         # Plot the debug data on the top graph
         if default_args['instrument'] == 'o3':
             self.data['bncht'].plot(ax=ax2, label=r'$\ T_{bench}$')
@@ -285,8 +288,8 @@ class ThermoPlot():
             self.data['smplfl'].plot(ax=ax1, label=r'$\ Q_{sample}$', style='--')
             self.data['so2'].plot(ax=ax3, label=r'$\ SO_2 $', color=default_args['color_so2'], ylim=[0,self.data['so2'].max()*1.05])
         else:
-            m = max(self.data['convt'].max(),self.data.intt.max(),self.data['pmtt'].max())
-            self.data['convt'].plot(ax=ax2, label=r'$\ T_{converter}$')
+            m = max(self.data['convt'].max(),self.data['intt'].max(),self.data['pmtt'].max())
+            self.data['convt'].plot(ax=ax2, label=r'$\ T_{converter}$') 
             self.data['intt'].plot(ax=ax2, label=r'$\ T_{internal}$')
             self.data['rctt'].plot(ax=ax2, label=r'$\ T_{reactor}$')
             self.data['pmtt'].plot(ax=ax2, label=r'$\ T_{PMT}$')
@@ -297,6 +300,21 @@ class ThermoPlot():
             self.data['no2'].plot(ax=ax3, label=r'$\ NO_{2}$', color=default_args['color_no2'])
             self.data['nox'].plot(ax=ax3, label=r'$\ NO_{x}$', color=default_args['color_nox'], ylim=(0,math.ceil(self.data.nox.max()*1.05)))
     
-   
+           
+        # Legends
+        lines, labels = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        
+        plt.legend(lines+lines2, labels+labels2, bbox_to_anchor=(1.10, 1), loc=2, borderaxespad=0.)
+        ax3.legend(bbox_to_anchor=(1.10, 1.), loc=2, borderaxespad=0.)
+        
+        # Hide grids?
+        ax1.grid(default_args['grid'])
+        ax2.grid(default_args['grid'])
+        ax3.grid(default_args['grid'])
+        
+        # More of the things..
+        plt.tight_layout()
+        plt.show()
+        
         return fig, (ax1, ax2, ax3)
-	
