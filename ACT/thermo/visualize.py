@@ -282,10 +282,13 @@ class ThermoPlot():
             self.data['lmpt'].plot(ax=ax2, label=r'$\ T_{lamp}$')
             self.data['flowa'].plot(ax=ax1, label=r'$\ Q_{A}$', style='--')
             self.data['flowb'].plot(ax=ax1, label=r'$\ Q_{B}$', style='--')
+
+            self.data['o3'].plot(ax=ax3, color=default_args['color_o3'], label=r'$\ O_{3}$')
         elif default_args['instrument'] == 'so2':
             self.data['intt'].plot(ax=ax2, label=r'$\ T_{internal}$')
             self.data['rctt'].plot(ax=ax2, label=r'$\ T_{reactor}$')
             self.data['smplfl'].plot(ax=ax1, label=r'$\ Q_{sample}$', style='--')
+            
             self.data['so2'].plot(ax=ax3, label=r'$\ SO_2 $', color=default_args['color_so2'], ylim=[0,self.data['so2'].max()*1.05])
         else:
             m = max(self.data['convt'].max(),self.data['intt'].max(),self.data['pmtt'].max())
