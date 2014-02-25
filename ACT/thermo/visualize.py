@@ -13,6 +13,7 @@ import math
 import glob
 import matplotlib
 import warnings
+import sys
 
 __all__ = ['diurnal_plot','diurnal_plot_single', 'ThermoPlot']
 
@@ -130,7 +131,7 @@ def diurnal_plot_single(data, model='', dates=[], shaded=False, color1 = 'blue',
         sys.exit("data is not a pandas DataFrame, thus this will not end well for you.")
         
     # Check to make sure the model is valid
-    if model.lower() not in ['nox','so2','o3']:
+    if model.lower() not in ['nox','so2','o3','sox']:
         sys.exit("Model is not defined correctly: options are ['nox','so2','sox','o3']")
         
     # Set model to predefined variable
