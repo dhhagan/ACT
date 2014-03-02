@@ -6,7 +6,7 @@ except ImportError:
 	from distutils.core import setup
 
 setup(name='ACT',
-      version='0.1.0',
+      version='0.2.0',
       description='Python library for analyzing trace gas data from thermo scientific gas analyzers',
       url='http://github.com/dhhagan/ACT',
       author='David H Hagan',
