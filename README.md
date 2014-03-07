@@ -47,6 +47,7 @@ MIT
 All documentation can be found on the [**ACT wiki**][ACT-wiki]
 
 Ipython examples are available for the following:
+
 1. [**Using the ACT Library for VAPS Analysis**][VAPS-ipython]
 2. [**Using the ACT Python Library**][ACT-ipython]
 
