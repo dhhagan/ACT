@@ -46,7 +46,13 @@ MIT
 
 All documentation can be found on the [**ACT wiki**][ACT-wiki]
 
+Ipython examples are available for the following:
+1. [[**Using the ACT Library for VAPS Analysis**][VAPS-ipython]
+2. [[**Using the ACT Python Library**]][ACT-ipython]
+
 [ACT-wiki]: https://github.com/dhhagan/ACT/wiki
+[VAPS-ipython]: http://nbviewer.ipython.org/github/dhhagan/ACT/blob/master/IPython%20Notebooks%20and%20Tutorials/Using%20the%20ACT%20Library%20for%20VAPS.ipynb?create=1
+[ACT-ipython]: http://nbviewer.ipython.org/url/davidhhagan.com/images/downloads/Plotting%20Trace%20Gas%20Data.ipynb?create=1
 
 ## Background
 
